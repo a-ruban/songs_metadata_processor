@@ -1,0 +1,46 @@
+version: '3'
+services:
+  nginx:
+    image: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./bmat/static:/opt/services/web/static
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - web
+    networks:
+      - backend
+
+  web:
+    build: .
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+      - ./bmat/static:/opt/services/web/static
+    links:
+      - postgres
+    networks:
+      - backend
+    environment:
+      - PYTHONPATH=./interview_top
+      - PRODUCTION=True
+    command: ./bmat/scripts/start.sh
+
+  postgres:
+    image: postgres:11.2-alpine
+    hostname: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
+
+networks:
+  backend:
+    driver: bridge
